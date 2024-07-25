@@ -1,5 +1,5 @@
-package com.kp2106.wechat.wechat_app
+package com.kp2106.wechat
 
 import io.flutter.embedding.android.FlutterActivity
 
-class MainActivity: FlutterActivity()
+class MainActivity: FlutterActivity(){}
