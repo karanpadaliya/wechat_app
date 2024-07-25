@@ -1,7 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:wechat_app/components/dialogs.dart';
 import 'package:wechat_app/screen/home_page.dart';
 
+import '../../helper/firebase_helper.dart';
 import '../../main.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -22,6 +26,21 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _isAnimate = true;
       });
+    });
+  }
+
+  _handleGoogleBtnClick() {
+    // For Showing Progress Bar
+    Dialogs.showProgressBar(context);
+    FirebaseHelper.firebaseHelper.signInWithGoogle(context).then((user) {
+      // For hiding Progress Bar
+      Navigator.pop(context);
+     if(user != null){
+       log("\nUser: ${user.user}");
+       log("\nAdition Information: ${user.additionalUserInfo}");
+       Navigator.pushReplacement(
+           context, MaterialPageRoute(builder: (context) => HomePage()));
+     }
     });
   }
 
@@ -48,11 +67,12 @@ class _LoginScreenState extends State<LoginScreen> {
             height: mq.height * .06,
             child: ElevatedButton.icon(
               onPressed: () {
-                Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomePage(),
-                    ));
+                _handleGoogleBtnClick();
+                // Navigator.pushReplacement(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (context) => HomePage(),
+                //     ));
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white.withOpacity(0.7),
