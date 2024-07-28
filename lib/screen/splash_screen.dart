@@ -3,11 +3,11 @@ import 'dart:developer';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/screen/auth/login_screen.dart';
 import 'package:wechat_app/screen/home_page.dart';
 
 import '../../main.dart';
+import '../helper/firebase_helper.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

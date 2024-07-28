@@ -32,15 +32,25 @@ class _LoginScreenState extends State<LoginScreen> {
   _handleGoogleBtnClick() {
     // For Showing Progress Bar
     Dialogs.showProgressBar(context);
-    FirebaseHelper.firebaseHelper.signInWithGoogle(context).then((user) {
+
+    FirebaseHelper.firebaseHelper.signInWithGoogle(context).then((user) async {
       // For hiding Progress Bar
       Navigator.pop(context);
-     if(user != null){
-       log("\nUser: ${user.user}");
-       log("\nAdition Information: ${user.additionalUserInfo}");
-       Navigator.pushReplacement(
-           context, MaterialPageRoute(builder: (context) => HomePage()));
-     }
+
+      if (user != null) {
+        log("\nUser: ${user.user}");
+        log("\nAdition Information: ${user.additionalUserInfo}");
+
+        if (await FirebaseHelper.userExists()) {
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => HomePage()));
+        } else {
+          await FirebaseHelper.createUser().then((value) {
+            return Navigator.pushReplacement(
+                context, MaterialPageRoute(builder: (context) => HomePage()));
+          });
+        }
+      }
     });
   }
 
