@@ -24,22 +24,25 @@ class _SplashScreenState extends State<SplashScreen> {
     Future.delayed(Duration(seconds: 2), () {
       // exit full screen
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      SystemChrome.setSystemUIOverlayStyle(
-          const SystemUiOverlayStyle(statusBarColor: Colors.transparent));
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarColor: Colors.white,
+      ));
 
       // Check already Sign in so navigate to the homeScreen
 
-      if(FirebaseHelper.auth.currentUser != null){
+      if (FirebaseHelper.auth.currentUser != null) {
         log("\nUser: ${FirebaseHelper.auth}");
         // Navigate to the HomeScreen
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => HomePage()));
-      }else{
-        // NAvigate to the Loginpage
+      } else {
+        // Navigate to the Loginpage
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => LoginScreen()));
       }
-
     });
   }
 
@@ -52,7 +55,6 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
       body: Stack(
         children: [
-
           // App Logo
           Positioned(
             top: mq.height * .15,

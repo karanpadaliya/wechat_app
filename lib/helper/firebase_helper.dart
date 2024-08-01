@@ -2,10 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:wechat_app/components/dialogs.dart';
 import 'package:wechat_app/model/chat_user.dart';
+import 'package:wechat_app/model/message.dart';
 
 class FirebaseHelper {
   FirebaseHelper._();
@@ -43,6 +45,9 @@ class FirebaseHelper {
 
   // All the below code is FireStore
   static final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+  // All the below code for assessing firebase storage
+  static final FirebaseStorage storage = FirebaseStorage.instance;
 
   // for storing selinformation
   static late ChatUser me;
@@ -115,4 +120,73 @@ class FirebaseHelper {
       "about": me.about,
     });
   }
+
+  // Update Profile Picture
+  static Future<void> updateProfilePicture(File file) async {
+    final ext = file.path.split('.').last;
+    log("Extension: $ext");
+    final ref = storage.ref().child("profile_picture/${authUser.email}.$ext");
+    await ref
+        .putFile(file, SettableMetadata(contentType: 'image/$ext'))
+        .then((p0) {
+      log("Data Transfered: ${p0.bytesTransferred / 1000} kb");
+    });
+    me.image = await ref.getDownloadURL();
+    await firestore
+        .collection('users')
+        .doc(auth.currentUser!.email)
+        .update({"image": me.image});
+  }
+
+  ///****************************chat messages *******************************
+
+  //  usefull for getting conversation id ===> Make unique ID
+  static String getConversationID(String id) =>
+      authUser.email.hashCode <= id.hashCode
+          ? '${authUser.email}_$id'
+          : '${id}_${authUser.email}';
+
+  // Getting all messages
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessages(
+      ChatUser user) {
+    return firestore
+        .collection(
+            'chats/${getConversationID(user.email ?? "getConversationID_error")}/messages/')
+        .snapshots();
+  }
+
+  static Future<void> sendMessage(ChatUser user, String msg) async {
+    // Message sending time is also used for ID
+    final time = DateTime.now().millisecondsSinceEpoch.toString();
+
+    // Get the user email and authenticated user email
+    final toId = user.email ?? "toId_error";
+    final fromId = authUser.email ?? "fromId_error";
+
+    // Ensure emails are not null or empty
+    if (toId == "toId_error" || fromId == "fromId_error") {
+      throw Exception("Invalid user email for message sending.");
+    }
+
+    // Message send
+    final Message message = Message(
+      toId: toId,
+      msg: msg,
+      read: '',
+      type: Type.text,
+      fromId: fromId,
+      sent: time,
+    );
+
+    // Properly form the document path
+    final conversationID = getConversationID(toId);
+    if (conversationID.isEmpty) {
+      throw Exception("Invalid conversation ID.");
+    }
+
+    final ref = firestore.collection('chats/$conversationID/messages');
+
+    await ref.doc(time).set(message.toJson());
+  }
+
 }

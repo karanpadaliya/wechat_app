@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
+import 'dart:ui';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:wechat_app/components/dialogs.dart';
 import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/model/chat_user.dart';
@@ -26,6 +29,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   // List<ChatUser> list = [];
   final _formKey = GlobalKey<FormState>();
+  String? _image;
 
   @override
   Widget build(BuildContext context) {
@@ -81,19 +85,32 @@ class _ProfilePageState extends State<ProfilePage> {
                   SizedBox(width: mq.width, height: mq.height * .03),
                   Stack(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(mq.height * .1),
-                        child: CachedNetworkImage(
-                          width: mq.height * .2,
-                          height: mq.height * .2,
-                          fit: BoxFit.fill,
-                          imageUrl: widget.user.image ?? "No_image_found",
-                          // placeholder: (context, url) => CircularProgressIndicator(),
-                          errorWidget: (context, url, error) => CircleAvatar(
-                            child: Icon(CupertinoIcons.person),
-                          ),
-                        ),
-                      ),
+                      _image != null
+                          ? ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(mq.height * .1),
+                              child: Image.file(
+                                File(_image!),
+                                width: mq.height * .2,
+                                height: mq.height * .2,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : ClipRRect(
+                              borderRadius:
+                                  BorderRadius.circular(mq.height * .1),
+                              child: CachedNetworkImage(
+                                width: mq.height * .2,
+                                height: mq.height * .2,
+                                fit: BoxFit.cover,
+                                imageUrl: widget.user.image ?? "No_image_found",
+                                // placeholder: (context, url) => CircularProgressIndicator(),
+                                errorWidget: (context, url, error) =>
+                                    CircleAvatar(
+                                  child: Icon(CupertinoIcons.person),
+                                ),
+                              ),
+                            ),
                       Positioned(
                         bottom: 0,
                         right: 0,
@@ -222,9 +239,7 @@ class _ProfilePageState extends State<ProfilePage> {
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
             ),
-            SizedBox(
-              height: mq.height * .02,
-            ),
+            SizedBox(height: mq.height * .02),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -233,14 +248,40 @@ class _ProfilePageState extends State<ProfilePage> {
                         backgroundColor: Colors.white,
                         shape: CircleBorder(),
                         fixedSize: Size(mq.width * .3, mq.height * .15)),
-                    onPressed: () {},
+                    onPressed: () async {
+                      final ImagePicker picker = ImagePicker();
+                      // Pick an image.                 //imageQuality for redusing server space
+                      final XFile? image = await picker.pickImage(
+                          source: ImageSource.gallery, imageQuality: 80);
+                      if (image != null) {
+                        log(image.path);
+                        setState(() {
+                          _image = image.path;
+                        });
+                        FirebaseHelper.updateProfilePicture(File(_image!));
+                        Navigator.pop(context);
+                      }
+                    },
                     child: Image.asset("assets/images/gallery.png")),
                 ElevatedButton(
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         shape: CircleBorder(),
                         fixedSize: Size(mq.width * .3, mq.height * .15)),
-                    onPressed: () {},
+                    onPressed: () async {
+                      final ImagePicker picker = ImagePicker();
+                      // Pick an image.                //imageQuality for redusing server space
+                      final XFile? image = await picker.pickImage(
+                          source: ImageSource.camera, imageQuality: 80);
+                      if (image != null) {
+                        log(image.path);
+                        setState(() {
+                          _image = image.path;
+                        });
+                        FirebaseHelper.updateProfilePicture(File(_image!));
+                        Navigator.pop(context);
+                      }
+                    },
                     child: Image.asset("assets/images/camera.png")),
               ],
             ),

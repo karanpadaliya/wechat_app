@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:wechat_app/model/chat_user.dart';
 
 import '../main.dart';
+import '../screen/chat_page.dart';
 
 class ChatUserCard extends StatefulWidget {
   final ChatUser user;
@@ -24,8 +25,13 @@ class _ChatUserCardState extends State<ChatUserCard> {
       elevation: 1,
       child: InkWell(
         onTap: () {
-
-          print(widget.user.image);
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatPage(
+                  user: widget.user,
+                ),
+              ));
         },
         child: ListTile(
           // leading: CircleAvatar(
@@ -34,10 +40,14 @@ class _ChatUserCardState extends State<ChatUserCard> {
           leading: ClipRRect(
             borderRadius: BorderRadius.circular(mq.height * .3),
             child: CircleAvatar(
+              maxRadius: 20,
+              backgroundColor: Color(0xff024382),
               child: CachedNetworkImage(
-                // width: mq.width * .1,
-                // height: mq.height * .1,
-                imageUrl: widget.user.image??"No_image_found",
+                width: mq.width * .1,
+                height: mq.height * .1,
+                imageUrl: widget.user.image ?? "No_image_found",
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 // placeholder: (context, url) => CircularProgressIndicator(),
                 errorWidget: (context, url, error) => CircleAvatar(
                   child: Icon(CupertinoIcons.person),
