@@ -1,6 +1,10 @@
+import 'dart:developer';
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/model/chat_user.dart';
 import 'package:wechat_app/model/message.dart';
@@ -20,114 +24,104 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   List<Message> _list = [];
   final _textController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  final FocusNode _focusNode = FocusNode();
+  bool _showEmoji = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // Add a listener to the focus node
-    _focusNode.addListener(() {
-      if (_focusNode.hasFocus) {
-        _scrollToBottom();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _textController.dispose();
-    _scrollController.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 5,
-          automaticallyImplyLeading: false,
-          flexibleSpace: _appBar(),
-        ),
-        backgroundColor: Colors.white,
-        body: Column(
-          children: [
-            Expanded(
-              child: StreamBuilder(
-                stream: FirebaseHelper.getAllMessages(widget.user),
-                builder: (context, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.waiting:
-                    case ConnectionState.none:
-                      return SizedBox();
-
-                    case ConnectionState.active:
-                    case ConnectionState.done:
-                      final data = snapshot.data?.docs;
-                      _list = data
-                          ?.map((e) => Message.fromJson(e.data()))
-                          .toList() ??
-                          [];
-
-                      if (_list.isNotEmpty) {
-                        // Scroll to the bottom whenever the messages list changes
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          _scrollToBottom();
-                        });
-
-                        return ListView.builder(
-                          controller: _scrollController,
-                          padding: EdgeInsets.only(top: mq.height * 0.01),
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: _list.length,
-                          itemBuilder: (context, index) {
-                            return MessageCard(message: _list[index]);
-                          },
-                        );
-                      } else {
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Say Hii! ",
-                              style: TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w500,
-                                  color: Color(0xff024382)),
-                            ),
-                            Icon(
-                              Icons.waving_hand,
-                              size: 40,
-                              color: Color(0xff024382),
-                            ),
-                          ],
-                        );
-                      }
-                  }
-                },
-              ),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: SafeArea(
+        top: false,
+        child: WillPopScope(
+          onWillPop: () async {
+            if (_showEmoji) {
+              setState(() {
+                _showEmoji = !_showEmoji;
+              });
+              return Future.value(false);
+            } else {
+              return Future.value(true);
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              elevation: 5,
+              automaticallyImplyLeading: false,
+              flexibleSpace: _appBar(),
             ),
-            _chatInput(),
-          ],
+            backgroundColor: Colors.white,
+            body: Column(
+              children: [
+                Expanded(
+                  child: StreamBuilder(
+                    stream: FirebaseHelper.getAllMessages(widget.user),
+                    builder: (context, snapshot) {
+                      switch (snapshot.connectionState) {
+                        case ConnectionState.waiting:
+                        case ConnectionState.none:
+                          return SizedBox();
+
+                        case ConnectionState.active:
+                        case ConnectionState.done:
+                          final data = snapshot.data?.docs;
+                          _list = data
+                                  ?.map((e) => Message.fromJson(e.data()))
+                                  .toList() ??
+                              [];
+
+                          if (_list.isNotEmpty) {
+                            // Scroll to the bottom whenever the messages list changes
+                            return ListView.builder(
+                              reverse: true,
+                              padding: EdgeInsets.only(top: mq.height * 0.01),
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: _list.length,
+                              itemBuilder: (context, index) {
+                                return MessageCard(message: _list[index]);
+                              },
+                            );
+                          } else {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  "Say Hii! ",
+                                  style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xff024382)),
+                                ),
+                                Icon(
+                                  Icons.waving_hand,
+                                  size: 40,
+                                  color: Color(0xff024382),
+                                ),
+                              ],
+                            );
+                          }
+                      }
+                    },
+                  ),
+                ),
+                _chatInput(),
+                if (_showEmoji)
+                  SizedBox(
+                    height: mq.height * .35,
+                    child: EmojiPicker(
+                      textEditingController: _textController,
+                      config: Config(),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -199,13 +193,17 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      setState(() {
+                        // FocusScope.of(context).unfocus();
+                        _showEmoji = !_showEmoji;
+                      });
+                    },
                     icon: Icon(CupertinoIcons.smiley_fill,
                         size: 26, color: Color(0xff024382)),
                   ),
                   Expanded(
                     child: TextFormField(
-                      focusNode: _focusNode,
                       controller: _textController,
                       autofocus: true,
                       textCapitalization: TextCapitalization.sentences,
@@ -216,6 +214,12 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                           hintText: "Message...",
                           hintStyle: TextStyle(color: Color(0xff024382)),
                           border: InputBorder.none),
+                      onTap: () {
+                        if (_showEmoji)
+                          setState(() {
+                            _showEmoji = !_showEmoji;
+                          });
+                      },
                     ),
                   ),
                   IconButton(
@@ -224,7 +228,17 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                         size: 25, color: Color(0xff024382)),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final ImagePicker picker = ImagePicker();
+                      // Pick an image.                 //imageQuality for redusing server space
+                      final XFile? image = await picker.pickImage(
+                          source: ImageSource.camera, imageQuality: 70);
+                      if (image != null) {
+                        log(image.path);
+                        await FirebaseHelper.sendChatImage(
+                            widget.user, File(image.path));
+                      }
+                    },
                     icon: Icon(CupertinoIcons.camera_fill,
                         size: 25, color: Color(0xff024382)),
                   ),
@@ -235,9 +249,9 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
           MaterialButton(
             onPressed: () {
               if (_textController.text.isNotEmpty) {
-                FirebaseHelper.sendMessage(widget.user, _textController.text);
+                FirebaseHelper.sendMessage(
+                    widget.user, _textController.text, Type.text);
                 _textController.clear();
-                _scrollToBottom();
               }
             },
             padding: EdgeInsets.all(8),

@@ -68,15 +68,22 @@ class _ChatUserCardState extends State<ChatUserCard> {
                 ),
               ),
               title: Text(widget.user.name ?? "NoUserNameFound"),
-              subtitle: Text(
-                "${_message != null ? _message?.msg : widget.user.about}",
-                maxLines: 1,
-              ),
+              subtitle: _message != null
+                  ? _message!.type == Type.image
+                      ? Row(
+                          children: [
+                            Icon(Icons.image,size: 20,),
+                            SizedBox(width: 4),
+                            Text('Photo'),
+                          ],
+                        )
+                      : Text(_message?.msg ?? "_message?.msg ??")
+                  : Text(widget.user.about ?? "widget.user.about"),
               trailing: _message == null
                   ? null
                   : _message!.read!.isEmpty &&
                           _message!.fromId !=
-                              widget.user
+                              FirebaseHelper.authUser
                                   .email //If in this line is firebase.authuser.emil
                       ? Container(
                           width: 15,
@@ -87,7 +94,9 @@ class _ChatUserCardState extends State<ChatUserCard> {
                           ),
                         )
                       : Text(
-                          MyDateUtil.getLastMessageTime(context: context, time: _message!.sent??"00:00"),
+                          MyDateUtil.getLastMessageTime(
+                              context: context,
+                              time: _message!.sent ?? "00:00"),
                           style: TextStyle(color: Colors.black54),
                         ),
               // trailing:

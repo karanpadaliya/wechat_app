@@ -152,10 +152,11 @@ class FirebaseHelper {
     return firestore
         .collection(
             'chats/${getConversationID(user.email ?? "getConversationID_error")}/messages/')
+        .orderBy('sent',descending: true)
         .snapshots();
   }
 
-  static Future<void> sendMessage(ChatUser user, String msg) async {
+  static Future<void> sendMessage(ChatUser user, String msg, Type type) async {
     // Message sending time is also used for ID
     final time = DateTime.now().millisecondsSinceEpoch.toString();
 
@@ -173,7 +174,7 @@ class FirebaseHelper {
       toId: toId,
       msg: msg,
       read: '',
-      type: Type.text,
+      type: type,
       fromId: fromId,
       sent: time,
     );
@@ -203,8 +204,27 @@ class FirebaseHelper {
     return firestore
         .collection(
             'chats/${getConversationID(user.email ?? "message.fromId??_notFound")}/messages/')
-        .orderBy('sent',descending: true)
+        .orderBy('sent', descending: true)
         .limit(1)
         .snapshots();
+  }
+
+  //send chat images
+  // Update Profile Picture
+  static Future<void> sendChatImage(ChatUser chatUser, File file) async {
+    final ext = file.path.split('.').last;
+
+    //storage file ref with path
+    final ref = storage.ref().child(
+        'images/${getConversationID(chatUser.email ?? "sendChatImage: getConversationID(chatUser.email??")}/${DateTime.now().millisecondsSinceEpoch}.$ext');
+    // final ref = storage.ref().child("images/${getConversationID(
+    //     chatUser.email ?? "message.fromId??_notFound") / ${DateTime}.$ext");
+    await ref
+        .putFile(file, SettableMetadata(contentType: 'image/$ext'))
+        .then((p0) {
+      log("Data Transfered: ${p0.bytesTransferred / 1000} kb");
+    });
+    final imageUrl = await ref.getDownloadURL();
+    await sendMessage(chatUser, imageUrl, Type.image);
   }
 }

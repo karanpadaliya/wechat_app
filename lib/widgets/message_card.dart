@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:wechat_app/components/my_data_util.dart';
 import 'package:wechat_app/helper/firebase_helper.dart';
@@ -59,10 +60,31 @@ class _MessageCardState extends State<MessageCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.message.msg ?? "Message not available",
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
-                ),
+                widget.message.type == Type.text
+                    ? Flexible(
+                        child: Text(
+                          widget.message.msg ?? "Message not available",
+                          style: TextStyle(fontSize: 14, color: Colors.black87),
+                          textAlign: TextAlign.start,
+                        ),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: CachedNetworkImage(
+                          width: mq.width * .9,
+                          height: mq.height * .4,
+                          imageUrl: widget.message.msg ??
+                              "imageUrl: widget.message.msg",
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
+                          placeholder: (context, url) =>
+                              CircularProgressIndicator(strokeWidth: 2),
+                          errorWidget: (context, url, error) => const Icon(
+                            Icons.image,
+                            size: 65,
+                          ),
+                        ),
+                      ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -124,10 +146,30 @@ class _MessageCardState extends State<MessageCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  widget.message.msg ?? "Message not available",
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
-                ),
+                widget.message.type == Type.text
+                    ? Text(
+                        widget.message.msg ?? "Message not available",
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                      )
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: CachedNetworkImage(
+                          width: mq.width * .9,
+                          height: mq.height * .4,
+                          imageUrl: widget.message.msg ??
+                              "imageUrl: widget.message.msg",
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.high,
+                          placeholder: (context, url) =>
+                              CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                          errorWidget: (context, url, error) => const Icon(
+                            Icons.image,
+                            size: 65,
+                          ),
+                        ),
+                      ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
