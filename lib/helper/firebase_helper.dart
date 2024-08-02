@@ -196,4 +196,15 @@ class FirebaseHelper {
         .doc(message.sent)
         .update({'read': DateTime.now().millisecondsSinceEpoch.toString()});
   }
+
+  // Get only last message of a specific chat
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getLastMessage(
+      ChatUser user) {
+    return firestore
+        .collection(
+            'chats/${getConversationID(user.email ?? "message.fromId??_notFound")}/messages/')
+        .orderBy('sent',descending: true)
+        .limit(1)
+        .snapshots();
+  }
 }

@@ -68,11 +68,14 @@ class _MessageCardState extends State<MessageCard> {
                   children: [
                     Padding(
                       padding: EdgeInsets.only(
-                          top: mq.height * .005, bottom: mq.height * .003),
+                          top: mq.height * .005,
+                          bottom: mq.height * .003,
+                          right: mq.width * .02),
                       child: Text(
                         MyDateUtil.getFormattedTime(
                           context: context,
-                          time: widget.message.sent ?? '0', // Provide a default value if null
+                          time: widget.message.sent ??
+                              '0', // Provide a default value if null
                         ),
                         style: TextStyle(fontSize: 11, color: Colors.grey),
                       ),
@@ -130,11 +133,14 @@ class _MessageCardState extends State<MessageCard> {
                   children: [
                     Padding(
                       padding: EdgeInsets.only(
-                          top: mq.height * .005, bottom: mq.height * .003),
+                          top: mq.height * .005,
+                          bottom: mq.height * .003,
+                          left: mq.width * .02),
                       child: Text(
                         MyDateUtil.getFormattedTime(
                           context: context,
-                          time: widget.message.sent ?? '0', // Provide a default value if null
+                          time: widget.message.sent ??
+                              '00:00', // Provide a default value if null
                         ),
                         style: TextStyle(fontSize: 11, color: Colors.grey),
                       ),
@@ -145,15 +151,15 @@ class _MessageCardState extends State<MessageCard> {
                       ),
                       child: widget.message.read!.isNotEmpty
                           ? Icon(
-                        Icons.done_all_outlined,
-                        size: 17,
-                        color: Colors.blue,
-                      )
+                              Icons.done_all_outlined,
+                              size: 17,
+                              color: Colors.blue,
+                            )
                           : Icon(
-                        Icons.done_all_outlined,
-                        size: 17,
-                        color: Colors.grey,
-                      ),
+                              Icons.done_all_outlined,
+                              size: 17,
+                              color: Colors.grey,
+                            ),
                     ),
                   ],
                 ),

@@ -1,7 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:wechat_app/components/my_data_util.dart';
+import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/model/chat_user.dart';
+import 'package:wechat_app/model/message.dart';
 
 import '../main.dart';
 import '../screen/chat_page.dart';
@@ -16,6 +19,8 @@ class ChatUserCard extends StatefulWidget {
 }
 
 class _ChatUserCardState extends State<ChatUserCard> {
+  Message? _message;
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -33,45 +38,61 @@ class _ChatUserCardState extends State<ChatUserCard> {
                 ),
               ));
         },
-        child: ListTile(
-          // leading: CircleAvatar(
-          //   child: Icon(CupertinoIcons.person),
-          // ),
-          leading: ClipRRect(
-            borderRadius: BorderRadius.circular(mq.height * .3),
-            child: CircleAvatar(
-              maxRadius: 20,
-              backgroundColor: Color(0xff024382),
-              child: CachedNetworkImage(
-                width: mq.width * .1,
-                height: mq.height * .1,
-                imageUrl: widget.user.image ?? "No_image_found",
-                fit: BoxFit.cover,
-                filterQuality: FilterQuality.high,
-                // placeholder: (context, url) => CircularProgressIndicator(),
-                errorWidget: (context, url, error) => CircleAvatar(
-                  child: Icon(CupertinoIcons.person),
+        child: StreamBuilder(
+          stream: FirebaseHelper.getLastMessage(widget.user),
+          builder: (context, snapshot) {
+            final data = snapshot.data?.docs;
+            final list =
+                data?.map((e) => Message.fromJson(e.data())).toList() ?? [];
+            if (list.isNotEmpty) {
+              _message = list[0];
+            }
+
+            return ListTile(
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(mq.height * .3),
+                child: CircleAvatar(
+                  maxRadius: 20,
+                  backgroundColor: Color(0xff024382),
+                  child: CachedNetworkImage(
+                    width: mq.width * .1,
+                    height: mq.height * .1,
+                    imageUrl: widget.user.image ?? "No_image_found",
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
+                    // placeholder: (context, url) => CircularProgressIndicator(),
+                    errorWidget: (context, url, error) => CircleAvatar(
+                      child: Icon(CupertinoIcons.person),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-          title: Text(widget.user.name ?? "NoUserNameFound"),
-          subtitle: Text(
-            widget.user.about ?? "NoAboutFound",
-            maxLines: 1,
-          ),
-          trailing: Container(
-            width: 15,
-            height: 15,
-            decoration: BoxDecoration(
-              color: Colors.green,
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          // trailing: Text(
-          //   "12:00 PM",
-          //   style: TextStyle(color: Colors.black54),
-          // ),
+              title: Text(widget.user.name ?? "NoUserNameFound"),
+              subtitle: Text(
+                "${_message != null ? _message?.msg : widget.user.about}",
+                maxLines: 1,
+              ),
+              trailing: _message == null
+                  ? null
+                  : _message!.read!.isEmpty &&
+                          _message!.fromId !=
+                              widget.user
+                                  .email //If in this line is firebase.authuser.emil
+                      ? Container(
+                          width: 15,
+                          height: 15,
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        )
+                      : Text(
+                          MyDateUtil.getLastMessageTime(context: context, time: _message!.sent??"00:00"),
+                          style: TextStyle(color: Colors.black54),
+                        ),
+              // trailing:
+            );
+          },
         ),
       ),
     );
