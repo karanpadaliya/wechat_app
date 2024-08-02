@@ -1,7 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/model/chat_user.dart';
 import 'package:wechat_app/model/message.dart';
@@ -18,11 +17,45 @@ class ChatPage extends StatefulWidget {
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   List<Message> _list = [];
-
-  // for handaling message text changes
   final _textController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    // Add a listener to the focus node
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        _scrollToBottom();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _textController.dispose();
+    _scrollController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +74,6 @@ class _ChatPageState extends State<ChatPage> {
             Expanded(
               child: StreamBuilder(
                 stream: FirebaseHelper.getAllMessages(widget.user),
-                //FirebaseHelper.getAllUsers()
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
@@ -52,13 +84,18 @@ class _ChatPageState extends State<ChatPage> {
                     case ConnectionState.done:
                       final data = snapshot.data?.docs;
                       _list = data
-                              ?.map((e) => Message.fromJson(e.data()))
-                              .toList() ??
+                          ?.map((e) => Message.fromJson(e.data()))
+                          .toList() ??
                           [];
-                      // final _list = [];
 
                       if (_list.isNotEmpty) {
+                        // Scroll to the bottom whenever the messages list changes
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          _scrollToBottom();
+                        });
+
                         return ListView.builder(
+                          controller: _scrollController,
                           padding: EdgeInsets.only(top: mq.height * 0.01),
                           physics: const BouncingScrollPhysics(),
                           itemCount: _list.length,
@@ -104,8 +141,9 @@ class _ChatPageState extends State<ChatPage> {
         child: Row(
           children: [
             IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: Icon(CupertinoIcons.back)),
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(CupertinoIcons.back),
+            ),
             ClipRRect(
               borderRadius: BorderRadius.circular(mq.height * .3),
               child: CircleAvatar(
@@ -115,16 +153,13 @@ class _ChatPageState extends State<ChatPage> {
                   imageUrl: widget.user.image ?? "No_image_found",
                   fit: BoxFit.cover,
                   filterQuality: FilterQuality.high,
-                  // placeholder: (context, url) => CircularProgressIndicator(),
                   errorWidget: (context, url, error) => CircleAvatar(
                     child: Icon(CupertinoIcons.person),
                   ),
                 ),
               ),
             ),
-            const SizedBox(
-              width: 10,
-            ),
+            const SizedBox(width: 10),
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,9 +171,6 @@ class _ChatPageState extends State<ChatPage> {
                       color: Colors.black87,
                       fontWeight: FontWeight.w500),
                 ),
-                // const SizedBox(
-                //   height: 1,
-                // ),
                 Text(
                   "Last seen not available",
                   style: TextStyle(
@@ -166,34 +198,31 @@ class _ChatPageState extends State<ChatPage> {
                   borderRadius: BorderRadius.circular(15)),
               child: Row(
                 children: [
-                  // Emoji button
                   IconButton(
                     onPressed: () {},
                     icon: Icon(CupertinoIcons.smiley_fill,
                         size: 26, color: Color(0xff024382)),
                   ),
-
                   Expanded(
-                      child: TextFormField(
-                    controller: _textController,
-                    autofocus: true,
-                    textCapitalization: TextCapitalization.words,
-                    keyboardType: TextInputType.multiline,
-                    minLines: 1,
-                    maxLines: 4,
-                    decoration: InputDecoration(
-                        hintText: "Message...",
-                        hintStyle: TextStyle(color: Color(0xff024382)),
-                        border: InputBorder.none),
-                  )),
-
-                  // image button
+                    child: TextFormField(
+                      focusNode: _focusNode,
+                      controller: _textController,
+                      autofocus: true,
+                      textCapitalization: TextCapitalization.sentences,
+                      keyboardType: TextInputType.multiline,
+                      minLines: 1,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                          hintText: "Message...",
+                          hintStyle: TextStyle(color: Color(0xff024382)),
+                          border: InputBorder.none),
+                    ),
+                  ),
                   IconButton(
                     onPressed: () {},
                     icon: Icon(CupertinoIcons.photo_fill_on_rectangle_fill,
                         size: 25, color: Color(0xff024382)),
                   ),
-                  // image form camera button
                   IconButton(
                     onPressed: () {},
                     icon: Icon(CupertinoIcons.camera_fill,
@@ -207,7 +236,8 @@ class _ChatPageState extends State<ChatPage> {
             onPressed: () {
               if (_textController.text.isNotEmpty) {
                 FirebaseHelper.sendMessage(widget.user, _textController.text);
-                _textController.text = '';
+                _textController.clear();
+                _scrollToBottom();
               }
             },
             padding: EdgeInsets.all(8),
@@ -219,7 +249,7 @@ class _ChatPageState extends State<ChatPage> {
               color: Colors.white,
               size: 22,
             ),
-          )
+          ),
         ],
       ),
     );

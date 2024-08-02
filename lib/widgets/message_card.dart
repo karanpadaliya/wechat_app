@@ -19,7 +19,6 @@ class MessageCard extends StatefulWidget {
 class _MessageCardState extends State<MessageCard> {
   @override
   Widget build(BuildContext context) {
-    // Message _msg = widget.message;
     return FirebaseHelper.authUser.email == widget.message.fromId
         ? _greenMessage()
         : _blueMessage();
@@ -61,7 +60,7 @@ class _MessageCardState extends State<MessageCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "gsh hs jx  hjbsh  jhbsha  jbj hhhc j hd  sdh h ghds hb b hds bhsd h h   hsbdvchs h hkhsbk  bcusb khsv h bkhsg  b${widget.message.msg ?? "widget.message.msg_null"}",
+                  widget.message.msg ?? "Message not available",
                   style: TextStyle(fontSize: 14, color: Colors.black87),
                 ),
                 Row(
@@ -72,9 +71,9 @@ class _MessageCardState extends State<MessageCard> {
                           top: mq.height * .005, bottom: mq.height * .003),
                       child: Text(
                         MyDateUtil.getFormattedTime(
-                            context: context,
-                            time: widget.message.sent ??
-                                "widget.message.sent_null"),
+                          context: context,
+                          time: widget.message.sent ?? '0', // Provide a default value if null
+                        ),
                         style: TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                     ),
@@ -123,7 +122,7 @@ class _MessageCardState extends State<MessageCard> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  "${widget.message.msg ?? "widget.message.msg_null"}",
+                  widget.message.msg ?? "Message not available",
                   style: TextStyle(fontSize: 14, color: Colors.black87),
                 ),
                 Row(
@@ -134,9 +133,9 @@ class _MessageCardState extends State<MessageCard> {
                           top: mq.height * .005, bottom: mq.height * .003),
                       child: Text(
                         MyDateUtil.getFormattedTime(
-                            context: context,
-                            time: widget.message.sent ??
-                                "widget.message.sent_null"),
+                          context: context,
+                          time: widget.message.sent ?? '0', // Provide a default value if null
+                        ),
                         style: TextStyle(fontSize: 11, color: Colors.grey),
                       ),
                     ),
@@ -146,15 +145,15 @@ class _MessageCardState extends State<MessageCard> {
                       ),
                       child: widget.message.read!.isNotEmpty
                           ? Icon(
-                              Icons.done_all_outlined,
-                              size: 17,
-                              color: Colors.blue,
-                            )
+                        Icons.done_all_outlined,
+                        size: 17,
+                        color: Colors.blue,
+                      )
                           : Icon(
-                              Icons.done_all_outlined,
-                              size: 17,
-                              color: Colors.grey,
-                            ),
+                        Icons.done_all_outlined,
+                        size: 17,
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
