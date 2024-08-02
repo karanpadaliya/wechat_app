@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:wechat_app/components/my_data_util.dart';
 import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/model/message.dart';
 
@@ -24,6 +27,12 @@ class _MessageCardState extends State<MessageCard> {
 
   // sender or another user message
   Widget _blueMessage() {
+    // update last read message if sender  and reciver are diffrent
+    if (widget.message.read!.isEmpty) {
+      FirebaseHelper.updateMessageReadStatus(widget.message);
+      log("Msg read updated");
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -57,7 +66,10 @@ class _MessageCardState extends State<MessageCard> {
                       right: mq.width * .02,
                       bottom: mq.height * .003),
                   child: Text(
-                    widget.message.sent ?? "widget.message.sent_null",
+                    MyDateUtil.getFormattedTime(
+                        context: context,
+                        time:
+                            widget.message.sent ?? "widget.message.sent_null"),
                     style: TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                 ),
@@ -108,20 +120,30 @@ class _MessageCardState extends State<MessageCard> {
                       top: mq.height * .02,
                       bottom: mq.height * .003),
                   child: Text(
-                    widget.message.sent ?? "widget.message.sent_null",
+                    MyDateUtil.getFormattedTime(
+                        context: context,
+                        time:
+                            widget.message.sent ?? "widget.message.sent_null"),
                     style: TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                 ),
                 Padding(
-                    padding: EdgeInsets.only(
-                        left: mq.width * .015,
-                        top: mq.height * .02,
-                        bottom: mq.height * .003),
-                    child: Icon(
-                      Icons.done_all_outlined,
-                      size: 17,
-                      color: Colors.blue,
-                    )),
+                  padding: EdgeInsets.only(
+                      left: mq.width * .015,
+                      top: mq.height * .02,
+                      bottom: mq.height * .003),
+                  child: widget.message.read!.isNotEmpty
+                      ? Icon(
+                          Icons.done_all_outlined,
+                          size: 17,
+                          color: Colors.blue,
+                        )
+                      : Icon(
+                          Icons.done_all_outlined,
+                          size: 17,
+                          color: Colors.grey,
+                        ),
+                ),
               ],
             ),
           ),

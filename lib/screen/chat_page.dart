@@ -179,7 +179,8 @@ class _ChatPageState extends State<ChatPage> {
                     autofocus: true,
                     textCapitalization: TextCapitalization.words,
                     keyboardType: TextInputType.multiline,
-                    maxLines: null,
+                    minLines: 1,
+                    maxLines: 4,
                     decoration: InputDecoration(
                         hintText: "Message...",
                         hintStyle: TextStyle(color: Color(0xff024382)),

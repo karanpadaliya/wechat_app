@@ -189,4 +189,11 @@ class FirebaseHelper {
     await ref.doc(time).set(message.toJson());
   }
 
+  static Future<void> updateMessageReadStatus(Message message) async {
+    firestore
+        .collection(
+            'chats/${getConversationID(message.fromId ?? "message.fromId??_notFound")}/messages/')
+        .doc(message.sent)
+        .update({'read': DateTime.now().millisecondsSinceEpoch.toString()});
+  }
 }
