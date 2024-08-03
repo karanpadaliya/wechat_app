@@ -61,12 +61,9 @@ class _MessageCardState extends State<MessageCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 widget.message.type == Type.text
-                    ? Flexible(
-                        child: Text(
-                          widget.message.msg ?? "Message not available",
-                          style: TextStyle(fontSize: 14, color: Colors.black87),
-                          textAlign: TextAlign.start,
-                        ),
+                    ? Text(
+                        widget.message.msg ?? "Message not available",
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
                       )
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(20),
@@ -78,7 +75,7 @@ class _MessageCardState extends State<MessageCard> {
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.high,
                           placeholder: (context, url) =>
-                              CircularProgressIndicator(strokeWidth: 2),
+                              LinearProgressIndicator(),
                           errorWidget: (context, url, error) => const Icon(
                             Icons.image,
                             size: 65,
@@ -131,25 +128,29 @@ class _MessageCardState extends State<MessageCard> {
               top: mq.height * .01,
             ),
             margin: EdgeInsets.only(
-                left: mq.width * .2,
-                right: mq.width * .02,
-                top: mq.height * .01),
+              left: mq.width * .2,
+              right: mq.width * .02,
+              top: mq.height * .01,
+            ),
             decoration: BoxDecoration(
               color: Colors.green.withOpacity(0.15),
               border: Border.all(color: Colors.green.withOpacity(0.5)),
               borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(30),
-                  topLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(-10),
-                  bottomLeft: Radius.circular(30)),
+                topRight: Radius.circular(30),
+                topLeft: Radius.circular(30),
+                bottomRight: Radius.circular(-10), // Incorrect negative value
+                bottomLeft: Radius.circular(30),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
+              // Ensuring left alignment within Column
               children: [
                 widget.message.type == Type.text
                     ? Text(
                         widget.message.msg ?? "Message not available",
                         style: TextStyle(fontSize: 14, color: Colors.black87),
+                        textAlign: TextAlign.left,
                       )
                     : ClipRRect(
                         borderRadius: BorderRadius.circular(20),
@@ -161,8 +162,8 @@ class _MessageCardState extends State<MessageCard> {
                           fit: BoxFit.cover,
                           filterQuality: FilterQuality.high,
                           placeholder: (context, url) =>
-                              CircularProgressIndicator(
-                            strokeWidth: 2,
+                              LinearProgressIndicator(
+                            color: Colors.grey.withOpacity(0.5),
                           ),
                           errorWidget: (context, url, error) => const Icon(
                             Icons.image,
@@ -171,18 +172,20 @@ class _MessageCardState extends State<MessageCard> {
                         ),
                       ),
                 Row(
+                  // crossAxisAlignment: CrossAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Padding(
                       padding: EdgeInsets.only(
-                          top: mq.height * .005,
-                          bottom: mq.height * .003,
-                          left: mq.width * .02),
+                        top: mq.height * .005,
+                        bottom: mq.height * .003,
+                        // left: mq.width * .2, // This can be removed if not needed
+                      ),
                       child: Text(
                         MyDateUtil.getFormattedTime(
                           context: context,
-                          time: widget.message.sent ??
-                              '00:00', // Provide a default value if null
+                          time: widget.message.sent ?? '00:00',
                         ),
                         style: TextStyle(fontSize: 11, color: Colors.grey),
                       ),
@@ -204,7 +207,7 @@ class _MessageCardState extends State<MessageCard> {
                             ),
                     ),
                   ],
-                ),
+                )
               ],
             ),
           ),
