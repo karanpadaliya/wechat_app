@@ -6,6 +6,7 @@ import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/model/chat_user.dart';
 import 'package:wechat_app/model/message.dart';
 
+import '../dialog/profile_dialog.dart';
 import '../main.dart';
 import '../screen/chat_page.dart';
 
@@ -49,20 +50,25 @@ class _ChatUserCardState extends State<ChatUserCard> {
             }
 
             return ListTile(
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(mq.height * .3),
-                child: CircleAvatar(
-                  maxRadius: 20,
-                  backgroundColor: Color(0xff024382),
-                  child: CachedNetworkImage(
-                    width: mq.width * .1,
-                    height: mq.height * .1,
-                    imageUrl: widget.user.image ?? "No_image_found",
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.high,
-                    // placeholder: (context, url) => CircularProgressIndicator(),
-                    errorWidget: (context, url, error) => CircleAvatar(
-                      child: Icon(CupertinoIcons.person),
+              leading: InkWell(
+                onTap: (){
+                  showDialog(context: context, builder: (context) => ProfileDialog(user: widget.user),);
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(mq.height * .3),
+                  child: CircleAvatar(
+                    maxRadius: 20,
+                    backgroundColor: Color(0xff024382),
+                    child: CachedNetworkImage(
+                      width: mq.width * .1,
+                      height: mq.height * .1,
+                      imageUrl: widget.user.image ?? "No_image_found",
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
+                      // placeholder: (context, url) => CircularProgressIndicator(),
+                      errorWidget: (context, url, error) => CircleAvatar(
+                        child: Icon(CupertinoIcons.person),
+                      ),
                     ),
                   ),
                 ),

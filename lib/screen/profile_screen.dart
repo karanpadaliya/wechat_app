@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
@@ -47,6 +46,9 @@ class _ProfilePageState extends State<ProfilePage> {
           child: FloatingActionButton.extended(
             onPressed: () async {
               Dialogs.showProgressBar(context);
+
+              await FirebaseHelper.updateActiveStatus(false);
+
               await FirebaseAuth.instance.signOut().then(
                 (value) async {
                   await GoogleSignIn().signOut().then(
@@ -56,6 +58,8 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       // for moving home screen
                       Navigator.pop(context);
+
+                      FirebaseHelper.auth = FirebaseAuth.instance;
                       Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(

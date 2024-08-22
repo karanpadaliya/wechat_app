@@ -9,6 +9,7 @@ import 'package:wechat_app/components/my_data_util.dart';
 import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/model/chat_user.dart';
 import 'package:wechat_app/model/message.dart';
+import 'package:wechat_app/screen/view_profile_screen.dart';
 import 'package:wechat_app/widgets/message_card.dart';
 
 import '../main.dart';
@@ -146,7 +147,13 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
     return Padding(
       padding: const EdgeInsets.only(top: 35),
       child: InkWell(
-        onTap: () {},
+        onTap: () {
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ViewProfilePage(user: widget.user),
+              ));
+        },
         child: StreamBuilder(
           stream: FirebaseHelper.getUserInfo(widget.user),
           builder: (context, snapshot) {
@@ -193,9 +200,11 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                           ? list[0].isOnline!
                               ? "Online"
                               : MyDateUtil.getLastActiveTime(
-                                  context: context, lastActive: list[0].lastActive!)
+                                  context: context,
+                                  lastActive: list[0].lastActive!)
                           : MyDateUtil.getLastActiveTime(
-                          context: context, lastActive: widget.user.lastActive!),
+                              context: context,
+                              lastActive: widget.user.lastActive!),
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.black54,

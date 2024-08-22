@@ -33,9 +33,11 @@ class _HomePageState extends State<HomePage> {
     SystemChannels.lifecycle.setMessageHandler((message){
 
       log("Message: $message");
+      if(FirebaseHelper.auth.currentUser != null){
+        if(message.toString().contains('resume')) FirebaseHelper.updateActiveStatus(true);
+        if(message.toString().contains('pause')) FirebaseHelper.updateActiveStatus(false);
+      }
 
-      if(message.toString().contains('resume')) FirebaseHelper.updateActiveStatus(true);
-      if(message.toString().contains('pause')) FirebaseHelper.updateActiveStatus(false);
       return Future.value(message);
     });
   }
