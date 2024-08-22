@@ -1,6 +1,9 @@
+import 'dart:developer';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/model/chat_user.dart';
@@ -26,6 +29,15 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     FirebaseHelper.getSelfInfo();
+    FirebaseHelper.updateActiveStatus(true);
+    SystemChannels.lifecycle.setMessageHandler((message){
+
+      log("Message: $message");
+
+      if(message.toString().contains('resume')) FirebaseHelper.updateActiveStatus(true);
+      if(message.toString().contains('pause')) FirebaseHelper.updateActiveStatus(false);
+      return Future.value(message);
+    });
   }
 
   @override

@@ -5,6 +5,7 @@ import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wechat_app/components/my_data_util.dart';
 import 'package:wechat_app/helper/firebase_helper.dart';
 import 'package:wechat_app/model/chat_user.dart';
 import 'package:wechat_app/model/message.dart';
@@ -24,7 +25,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
   List<Message> _list = [];
   final _textController = TextEditingController();
-  bool _showEmoji = false;
+  bool _showEmoji = false, _isUploading = false;
 
   @override
   void initState() {
@@ -110,6 +111,20 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                     },
                   ),
                 ),
+
+                // for showing uploading images
+                if (_isUploading)
+                  const Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                      child: CircularProgressIndicator(
+                        color: Color(0xff024382),
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  ),
                 _chatInput(),
                 if (_showEmoji)
                   SizedBox(
@@ -132,49 +147,65 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
       padding: const EdgeInsets.only(top: 35),
       child: InkWell(
         onTap: () {},
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: Icon(CupertinoIcons.back),
-            ),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(mq.height * .3),
-              child: CircleAvatar(
-                child: CachedNetworkImage(
-                  width: mq.width * .1,
-                  height: mq.height * .1,
-                  imageUrl: widget.user.image ?? "No_image_found",
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.high,
-                  errorWidget: (context, url, error) => CircleAvatar(
-                    child: Icon(CupertinoIcons.person),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: StreamBuilder(
+          stream: FirebaseHelper.getUserInfo(widget.user),
+          builder: (context, snapshot) {
+            final data = snapshot.data?.docs;
+            final list =
+                data?.map((e) => ChatUser.fromJson(e.data())).toList() ?? [];
+            return Row(
               children: [
-                Text(
-                  widget.user.name!,
-                  style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                      fontWeight: FontWeight.w500),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(CupertinoIcons.back),
                 ),
-                Text(
-                  "Last seen not available",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.black54,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(mq.height * .3),
+                  child: CircleAvatar(
+                    child: CachedNetworkImage(
+                      width: mq.width * .1,
+                      height: mq.height * .1,
+                      imageUrl: list.isNotEmpty
+                          ? list[0].image ?? "No_image_found"
+                          : widget.user.image ?? "No_image_found",
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
+                      errorWidget: (context, url, error) => CircleAvatar(
+                        child: Icon(CupertinoIcons.person),
+                      ),
+                    ),
                   ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      list.isNotEmpty ? list[0].name! : widget.user.name!,
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500),
+                    ),
+                    Text(
+                      list.isNotEmpty
+                          ? list[0].isOnline!
+                              ? "Online"
+                              : MyDateUtil.getLastActiveTime(
+                                  context: context, lastActive: list[0].lastActive!)
+                          : MyDateUtil.getLastActiveTime(
+                          context: context, lastActive: widget.user.lastActive!),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -223,7 +254,19 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                     ),
                   ),
                   IconButton(
-                    onPressed: () {},
+                    onPressed: () async {
+                      final ImagePicker picker = ImagePicker();
+                      // Pick an Multipleimage.                 //imageQuality for redusing server space
+                      final List<XFile> images =
+                          await picker.pickMultiImage(imageQuality: 70);
+
+                      for (var i in images) {
+                        setState(() => _isUploading = true);
+                        await FirebaseHelper.sendChatImage(
+                            widget.user, File(i.path));
+                        setState(() => _isUploading = false);
+                      }
+                    },
                     icon: Icon(CupertinoIcons.photo_fill_on_rectangle_fill,
                         size: 25, color: Color(0xff024382)),
                   ),
@@ -234,9 +277,10 @@ class _ChatPageState extends State<ChatPage> with WidgetsBindingObserver {
                       final XFile? image = await picker.pickImage(
                           source: ImageSource.camera, imageQuality: 70);
                       if (image != null) {
-                        log(image.path);
+                        setState(() => _isUploading = true);
                         await FirebaseHelper.sendChatImage(
                             widget.user, File(image.path));
+                        setState(() => _isUploading = false);
                       }
                     },
                     icon: Icon(CupertinoIcons.camera_fill,

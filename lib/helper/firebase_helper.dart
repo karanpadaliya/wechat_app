@@ -152,7 +152,7 @@ class FirebaseHelper {
     return firestore
         .collection(
             'chats/${getConversationID(user.email ?? "getConversationID_error")}/messages/')
-        .orderBy('sent',descending: true)
+        .orderBy('sent', descending: true)
         .snapshots();
   }
 
@@ -226,5 +226,21 @@ class FirebaseHelper {
     });
     final imageUrl = await ref.getDownloadURL();
     await sendMessage(chatUser, imageUrl, Type.image);
+  }
+
+  // Last seen || ONLINE & OFFLINE
+  static Stream<QuerySnapshot<Map<String, dynamic>>> getUserInfo(
+      ChatUser chatUser) {
+    return firestore
+        .collection('users')
+        .where('email', isEqualTo: chatUser.email)
+        .snapshots();
+  }
+
+  static Future<void> updateActiveStatus(bool isOnline) async {
+    firestore.collection('users').doc(authUser.email).update({
+      'is_online': isOnline,
+      'last_active': DateTime.now().millisecondsSinceEpoch.toString()
+    });
   }
 }
