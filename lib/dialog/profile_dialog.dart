@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:wechat_app/model/chat_user.dart';
+import 'package:wechat_app/screen/view_profile_screen.dart';
 
 import '../main.dart';
 
@@ -54,11 +55,18 @@ class ProfileDialog extends StatelessWidget {
               right: 8,
               top: 5,
               child: MaterialButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ViewProfilePage(user: user),
+                      ));
+                },
                 elevation: 15,
                 shape: CircleBorder(),
                 minWidth: 0,
                 padding: EdgeInsets.all(0),
-                onPressed: () {},
                 child: SizedBox(
                     height: 27,
                     child: Image.asset(

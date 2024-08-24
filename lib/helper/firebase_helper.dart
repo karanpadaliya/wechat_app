@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:developer';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -74,6 +75,8 @@ class FirebaseHelper {
       (user) async {
         if (user.exists) {
           me = ChatUser.fromJson(user.data()!);
+          await getFirebaseMessagingToken();
+          FirebaseHelper.updateActiveStatus(true);
         } else {
           await createUser().then(
             (value) => getSelfInfo(),
@@ -240,7 +243,23 @@ class FirebaseHelper {
   static Future<void> updateActiveStatus(bool isOnline) async {
     firestore.collection('users').doc(authUser.email).update({
       'is_online': isOnline,
-      'last_active': DateTime.now().millisecondsSinceEpoch.toString()
+      'last_active': DateTime.now().millisecondsSinceEpoch.toString(),
+      'push_token': me.pushToken,
+    });
+  }
+
+//   ********************* Firebase Messaging ***********************
+
+  static FirebaseMessaging fMessaging = FirebaseMessaging.instance;
+
+  static Future<void> getFirebaseMessagingToken() async {
+    await fMessaging.requestPermission();
+
+    await fMessaging.getToken().then((t) {
+      if (t != null) {
+        me.pushToken = t;
+        log("Push Tokan $t");
+      }
     });
   }
 }

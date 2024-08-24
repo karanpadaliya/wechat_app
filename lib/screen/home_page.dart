@@ -29,7 +29,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     FirebaseHelper.getSelfInfo();
-    FirebaseHelper.updateActiveStatus(true);
+
     SystemChannels.lifecycle.setMessageHandler((message){
 
       log("Message: $message");
