@@ -132,7 +132,7 @@ class FirebaseHelper {
     await ref
         .putFile(file, SettableMetadata(contentType: 'image/$ext'))
         .then((p0) {
-      log("Data Transfered: ${p0.bytesTransferred / 1000} kb");
+      log("Data Transferred: ${p0.bytesTransferred / 1000} kb");
     });
     me.image = await ref.getDownloadURL();
     await firestore
@@ -225,7 +225,7 @@ class FirebaseHelper {
     await ref
         .putFile(file, SettableMetadata(contentType: 'image/$ext'))
         .then((p0) {
-      log("Data Transfered: ${p0.bytesTransferred / 1000} kb");
+      log("Data Transferred: ${p0.bytesTransferred / 1000} kb");
     });
     final imageUrl = await ref.getDownloadURL();
     await sendMessage(chatUser, imageUrl, Type.image);
@@ -258,7 +258,7 @@ class FirebaseHelper {
     await fMessaging.getToken().then((t) {
       if (t != null) {
         me.pushToken = t;
-        log("Push Tokan $t");
+        log("Push Token $t");
       }
     });
   }

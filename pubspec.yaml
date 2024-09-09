@@ -17,11 +17,11 @@ dependencies:
   firebase_auth: ^5.1.2
   google_sign_in: ^6.2.1
   cloud_firestore: ^5.0.2
-  cached_network_image: ^3.3.1
-  image_picker: ^1.1.2
-  firebase_storage: ^12.1.1
-  emoji_picker_flutter: ^2.2.0
   firebase_messaging: ^15.0.4
+  firebase_storage: ^12.1.1
+  image_picker: ^1.1.2
+  emoji_picker_flutter: ^2.2.0
+  cached_network_image: ^3.3.1
 
 dev_dependencies:
   flutter_test:
