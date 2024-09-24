@@ -22,7 +22,7 @@
           }
         },
         {
-          "client_id": "822191016343-eoavh6fauri7ntu12kgcb03h0vi3hc61.apps.googleusercontent.com",
+          "client_id": "822191016343-aqnlnb4t4setcom3ui422tujqlirqpfb.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -35,11 +35,11 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "822191016343-eoavh6fauri7ntu12kgcb03h0vi3hc61.apps.googleusercontent.com",
+              "client_id": "822191016343-aqnlnb4t4setcom3ui422tujqlirqpfb.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "822191016343-t2nvvlvrgjptckungh14l6mhjcsan4a2.apps.googleusercontent.com",
+              "client_id": "822191016343-47qbdhaf1k89eorcj8q0nmon097fu1rf.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.kp2106.wechat.wechatApp"

@@ -1,14 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'dart:developer';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:wechat_app/components/dialogs.dart';
 import 'package:wechat_app/model/chat_user.dart';
 import 'package:wechat_app/model/message.dart';
+import 'package:wechat_app/screen/home_page.dart';
 
 class FirebaseHelper {
   FirebaseHelper._();
@@ -16,31 +18,80 @@ class FirebaseHelper {
   static final FirebaseHelper firebaseHelper = FirebaseHelper._();
 
   static FirebaseAuth auth = FirebaseAuth.instance;
+  static GoogleSignIn googleSignIn = GoogleSignIn();
 
-  // handles google login button click
-  Future<UserCredential?> signInWithGoogle(BuildContext context) async {
+  // Handles Google login button click
+  static Future<UserCredential?> signInWithGoogle(BuildContext context) async {
     try {
-      await InternetAddress.lookup('google.com');
-      // Trigger the authentication flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      // Check for internet connection
+      final connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Check your internet connection and try again.')),
+        );
+        return null;
+      }
 
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication? googleAuth =
-          await googleUser?.authentication;
+      // Sign out the previous Google session if there is any.
+      await googleSignIn.signOut();
 
-      // Create a new credential
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken,
-        idToken: googleAuth?.idToken,
+      // Attempt Google sign-in
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      log('Google User: ${googleUser?.email}');
+
+      if (googleUser == null) {
+        log('Google Sign-In canceled');
+        return null; // User canceled sign-in
+      }
+
+      // Fetch authentication token from the Google account.
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      log('Google Authentication: ${googleAuth.accessToken}, ${googleAuth.idToken}');
+
+      // Create Firebase credentials from Google sign-in token.
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
+      log('Google Credentials: ${credential.providerId}');
 
-      // Once signed in, return the UserCredential
-      return await auth.signInWithCredential(credential);
+      // Sign in to Firebase with the Google credential.
+      final UserCredential userCredential = await auth.signInWithCredential(credential);
+
+      // Check if the user is successfully signed in
+      if (userCredential.user != null) {
+        log('User signed in: ${userCredential.user!.email}');
+
+        // Optionally add user to Firestore or perform other actions here
+        // await addUserToFirestore(userCredential.user!);
+
+        // Return the userCredential if everything is successful
+        return userCredential;
+      } else {
+        log('No user found after sign-in');
+        return null;
+      }
     } catch (e) {
-      log("\nsignInWithGoogle: $e");
-      Dialogs.showSnackbar(
-          context, "Something Went Wrong (Check Internet!) ", Colors.redAccent);
-      return null;
+      // Handle FirebaseAuthException
+      if (e is FirebaseAuthException) {
+        log('FirebaseAuthException: ${e.code} - ${e.message}');
+      }
+      // Handle PlatformException
+      else if (e is PlatformException) {
+        log('PlatformException: ${e.code} - ${e.message} - ${e.details}');
+      }
+      // Handle generic errors
+      else {
+        log('Error during Google Sign-In: $e');
+      }
+
+      // Display error message via a SnackBar
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login error: ${e.toString()}')),
+        );
+      }
+      return null; // Return null on error
     }
   }
 
@@ -59,9 +110,9 @@ class FirebaseHelper {
   //   check if user exists or not
   static Future<bool> userExists() async {
     return (await firestore
-            .collection('users')
-            .doc(auth.currentUser!.email)
-            .get())
+        .collection('users')
+        .doc(auth.currentUser!.email)
+        .get())
         .exists;
   }
 
@@ -72,14 +123,14 @@ class FirebaseHelper {
         .doc(auth.currentUser!.email)
         .get()
         .then(
-      (user) async {
+          (user) async {
         if (user.exists) {
           me = ChatUser.fromJson(user.data()!);
           await getFirebaseMessagingToken();
           FirebaseHelper.updateActiveStatus(true);
         } else {
           await createUser().then(
-            (value) => getSelfInfo(),
+                (value) => getSelfInfo(),
           );
         }
       },
@@ -154,7 +205,7 @@ class FirebaseHelper {
       ChatUser user) {
     return firestore
         .collection(
-            'chats/${getConversationID(user.email ?? "getConversationID_error")}/messages/')
+        'chats/${getConversationID(user.email ?? "getConversationID_error")}/messages/')
         .orderBy('sent', descending: true)
         .snapshots();
   }
@@ -196,7 +247,7 @@ class FirebaseHelper {
   static Future<void> updateMessageReadStatus(Message message) async {
     firestore
         .collection(
-            'chats/${getConversationID(message.fromId ?? "message.fromId??_notFound")}/messages/')
+        'chats/${getConversationID(message.fromId ?? "message.fromId??_notFound")}/messages/')
         .doc(message.sent)
         .update({'read': DateTime.now().millisecondsSinceEpoch.toString()});
   }
@@ -206,7 +257,7 @@ class FirebaseHelper {
       ChatUser user) {
     return firestore
         .collection(
-            'chats/${getConversationID(user.email ?? "message.fromId??_notFound")}/messages/')
+        'chats/${getConversationID(user.email ?? "message.fromId??_notFound")}/messages/')
         .orderBy('sent', descending: true)
         .limit(1)
         .snapshots();

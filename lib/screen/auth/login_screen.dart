@@ -30,27 +30,32 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   _handleGoogleBtnClick() {
-    // For Showing Progress Bar
     Dialogs.showProgressBar(context);
 
-    FirebaseHelper.firebaseHelper.signInWithGoogle(context).then((user) async {
-      // For hiding Progress Bar
-      Navigator.pop(context);
+    FirebaseHelper.signInWithGoogle(context).then((userCredential) async {
+      Navigator.pop(context); // Hide the progress bar
 
-      if (user != null) {
-        log("\nUser: ${user.user}");
-        log("\nAdition Information: ${user.additionalUserInfo}");
+      if (userCredential != null) {
+        log("\nUser: ${userCredential.user}");
+        log("\nAdditional Information: ${userCredential.additionalUserInfo}");
 
         if (await FirebaseHelper.userExists()) {
           Navigator.pushReplacement(
               context, MaterialPageRoute(builder: (context) => HomePage()));
         } else {
           await FirebaseHelper.createUser().then((value) {
-            return Navigator.pushReplacement(
+            Navigator.pushReplacement(
                 context, MaterialPageRoute(builder: (context) => HomePage()));
           });
         }
+      } else {
+        log('Sign in failed or was canceled.');
+        // Optionally, you can show an error message here
       }
+    }).catchError((error) {
+      Navigator.pop(context); // Hide the progress bar
+      log('Error during Google Sign-In: $error');
+      // Handle the error as necessary
     });
   }
 
