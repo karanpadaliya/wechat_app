@@ -123,5 +123,9 @@ cd wechat_app</code></pre>
 <h2>Conclusion</h2>
 <p>This chat application offers a seamless and secure experience using Firebase services, ensuring that users can easily communicate with others. The flexible UI with light and dark themes enhances user satisfaction. Whether for personal or professional use, <strong>Firebase Miner (Chat App)</strong> brings reliability to instant messaging.</p>
 
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 </body>
 </html>
