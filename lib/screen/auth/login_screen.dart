@@ -22,7 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
 
-    Future.delayed(Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
         _isAnimate = true;
       });
@@ -40,12 +40,12 @@ class _LoginScreenState extends State<LoginScreen> {
         log("\nAdditional Information: ${userCredential.additionalUserInfo}");
 
         if (await FirebaseHelper.userExists()) {
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (context) => HomePage()));
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const HomePage()));
         } else {
           await FirebaseHelper.createUser().then((value) {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => HomePage()));
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => const HomePage()));
           });
         }
       } else {
@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
     mq = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
-        title: Text("Welcome to We Chat"),
+        title: const Text("Welcome to We Chat"),
       ),
       body: Stack(
         children: [
@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
             top: mq.height * .15,
             right: _isAnimate ? mq.width * .25 : -mq.width * .5,
             width: mq.width * .5,
-            duration: Duration(seconds: 1),
+            duration: const Duration(seconds: 1),
             child: Image.asset("assets/images/logo.png"),
           ),
           Positioned(
@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white.withOpacity(0.7),
-                shape: StadiumBorder(),
+                shape: const StadiumBorder(),
                 elevation: 4,
               ),
               icon: Image.asset(
@@ -99,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 height: mq.height * .03,
               ),
               label: RichText(
-                text: TextSpan(
+                text: const TextSpan(
                     style: TextStyle(color: Colors.black, fontSize: 16),
                     children: [
                       TextSpan(text: "Login with "),
